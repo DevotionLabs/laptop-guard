@@ -6,13 +6,18 @@ mod telegram_bot;
 mod telegram_notifier;
 mod validator;
 
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
 use clap::Parser;
 use cli::Cli;
 use laptop_guarder::LaptopGuarder;
 use logger::{fatal, info};
 use telegram_bot::TelegramBot;
 use telegram_notifier::TelegramNotifier;
-use tokio::task;
+use tokio::{signal, task};
 use validator::validate_telegram_inputs;
 
 #[tokio::main]
@@ -29,9 +34,12 @@ async fn main() {
         }
     }
 
+    let shutdown_flag = Arc::new(AtomicBool::new(false));
+
     let tg_bot = TelegramBot::new(bot_token.clone());
     let tg_notifier = TelegramNotifier::new(bot_token.clone(), chat_id);
-    let guarder = LaptopGuarder::new(tg_notifier, args.interval);
+
+    let guarder = LaptopGuarder::new(tg_notifier, args.interval, shutdown_flag.clone());
 
     let bot_task = task::spawn(async move {
         tg_bot.run().await;
@@ -41,5 +49,11 @@ async fn main() {
         guarder.start();
     });
 
-    let _ = tokio::join!(bot_task, guarder_task);
+    let shutdown_task = task::spawn(async move {
+        signal::ctrl_c().await.unwrap();
+        info("Shutting down...");
+        shutdown_flag.store(true, Ordering::SeqCst);
+    });
+
+    let _ = tokio::join!(bot_task, guarder_task, shutdown_task);
 }

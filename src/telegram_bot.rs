@@ -1,6 +1,5 @@
 use crate::logger::{error, info};
 use teloxide::{prelude::*, repl, types::ParseMode, utils::markdown::escape};
-use tokio::signal;
 
 pub struct TelegramBot {
     bot: Bot,
@@ -19,10 +18,6 @@ impl TelegramBot {
             Ok(())
         })
         .await;
-
-        signal::ctrl_c()
-            .await
-            .expect("Failed to listen for shutdown signal");
 
         info("🛑 Telegram bot shutting down...");
     }
