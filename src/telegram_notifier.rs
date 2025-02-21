@@ -1,4 +1,5 @@
 use ureq::get;
+use urlencoding::encode;
 
 use crate::logger::{error, info};
 
@@ -12,10 +13,12 @@ impl TelegramNotifier {
         Self { bot_token, chat_id }
     }
 
-    pub fn send_message(&self, message: &str) {
+    pub fn send_message(&self, msg: &str) {
+        let uri_encoded_msg = encode(msg);
+
         let url = format!(
             "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}",
-            self.bot_token, self.chat_id, message
+            self.bot_token, self.chat_id, uri_encoded_msg
         );
 
         if let Err(e) = get(&url).call() {

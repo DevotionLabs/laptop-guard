@@ -16,7 +16,6 @@ impl TelegramBot {
     pub async fn run(&self) {
         info("🤖 Telegram bot is online!");
 
-        // Keep the bot running by listening for Ctrl+C or termination signals
         signal::ctrl_c()
             .await
             .expect("Failed to listen for shutdown signal");

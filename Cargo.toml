@@ -9,4 +9,7 @@ chrono = "0.4.39"
 clap = { version = "4.5.28", features = ["derive"] }
 colored = "3.0.0"
 regex = "1.11.1"
+teloxide = { version = "0.13.0", features = ["macros", "throttle"] }
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros"]}
 ureq = "3.0.6"
+urlencoding = "2.1.3"
