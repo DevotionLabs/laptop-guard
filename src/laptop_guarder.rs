@@ -1,5 +1,3 @@
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -10,19 +8,13 @@ use crate::telegram_notifier::TelegramNotifier;
 pub struct LaptopGuarder {
     telegram_notifier: TelegramNotifier,
     interval: u64,
-    shutdown_flag: Arc<AtomicBool>,
 }
 
 impl LaptopGuarder {
-    pub fn new(
-        telegram_notifier: TelegramNotifier,
-        interval: u64,
-        shutdown_flag: Arc<AtomicBool>,
-    ) -> Self {
+    pub fn new(telegram_notifier: TelegramNotifier, interval: u64) -> Self {
         Self {
             telegram_notifier,
             interval,
-            shutdown_flag,
         }
     }
 
@@ -30,7 +22,7 @@ impl LaptopGuarder {
         info("Monitoring laptop power state...");
         let mut was_plugged = is_plugged();
 
-        while !self.shutdown_flag.load(Ordering::SeqCst) {
+        loop {
             sleep(Duration::from_secs(self.interval));
 
             let is_plugged = is_plugged();
