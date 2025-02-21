@@ -1,5 +1,5 @@
 use crate::logger::{error, info};
-use teloxide::{prelude::*, repl, types::ParseMode, utils::markdown::escape};
+use teloxide::{prelude::*, repl, types::ParseMode};
 
 pub struct TelegramBot {
     bot: Bot,
@@ -38,20 +38,19 @@ impl TelegramBot {
     }
 
     async fn handle_default(bot: &Bot, msg: Message) {
-        let helper_text = "🔔 Laptop Guard Alert System\n\
-        This bot alerts you in this chat if your laptop is unplugged while Laptop Guard is running.\n\n\
+        let helper_text = "🔔 Laptop Guard Alert System\n\n\
+        This bot alerts you in this chat if your laptop is unplugged while Laptop Guard is running\n\n\
         📌 Available commands:\n\
-        /chatid -> Retrieve your chat ID (needed when running the binary).\n\n\
-        ℹ️ No other commands are available. Just wait for alerts if your laptop is unplugged.";
+        `/chatid`: Retrieve your chat ID\n\n\
+        ℹ️ No other commands are available\n\
+        Just wait for alerts if your laptop is unplugged";
 
         Self::send_markdown_message(bot, msg.chat.id, helper_text).await;
     }
 
     async fn send_markdown_message(bot: &Bot, chat_id: ChatId, msg: &str) {
-        let escaped_msg = escape(msg);
-
         if let Err(e) = bot
-            .send_message(chat_id, escaped_msg)
+            .send_message(chat_id, msg)
             .parse_mode(ParseMode::MarkdownV2)
             .await
         {
