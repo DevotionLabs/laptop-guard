@@ -14,15 +14,16 @@ pub struct Cli {
         short = 'c',
         long = "chat",
         help = "Sets the Telegram chat ID",
-        required = true
+        required = false
     )]
-    pub chat_id: String,
+    pub chat_id: Option<String>,
 
     #[clap(
         short = 'i',
         long = "interval",
         help = "Sets the interval between checks in seconds",
-        default_value = "20"
+        default_value = "20",
+        required = false
     )]
     pub interval: u64,
 }
