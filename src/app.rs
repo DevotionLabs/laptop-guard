@@ -1,6 +1,6 @@
 use crate::{
     app_config::AppConfig, logger::info, service_factory::ServiceFactory,
-    task_manager::TaskManager, validator::validate_telegram_inputs,
+    task_manager::TaskManager, validator::validate_tg_bot_token,
 };
 use tokio::task;
 
@@ -14,7 +14,7 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        validate_telegram_inputs(&self.config.bot_token, self.config.chat_id.as_deref())?;
+        validate_tg_bot_token(&self.config.bot_token)?;
 
         let (bot_task, guard_task) = self.initialize_services();
 
@@ -26,20 +26,22 @@ impl App {
 
     fn initialize_services(&self) -> (task::JoinHandle<()>, Option<task::JoinHandle<()>>) {
         let bot = ServiceFactory::create_bot(&self.config.bot_token);
-        let bot_task = task::spawn(async move { bot.run().await });
+        let bot_task = {
+            let bot_clone = bot.clone();
+            task::spawn(async move { bot_clone.run().await })
+        };
 
-        let guard_task = self.config.chat_id.as_ref().map(|chat_id| {
+        if let Some(chat_id) = self.config.chat_id {
             info("Starting laptop guard process in full mode...");
-            let guard =
-                ServiceFactory::create_guard(&self.config.bot_token, chat_id, self.config.interval);
-            task::spawn_blocking(move || guard.start())
-        });
+            info(&format!("Chat ID: {}", chat_id));
 
-        if guard_task.is_none() {
+            let guard = ServiceFactory::create_guard(bot, chat_id, self.config.interval);
+            let guard_task = task::spawn_blocking(move || guard.start());
+            (bot_task, Some(guard_task))
+        } else {
             info("Starting laptop guard in bot-only mode...");
             info("Use /chatid command to get your chat ID");
+            (bot_task, None)
         }
-
-        (bot_task, guard_task)
     }
 }

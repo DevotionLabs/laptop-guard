@@ -1,7 +1,4 @@
-use crate::{
-    laptop_guarder::LaptopGuarder, logger::info, telegram_bot::TelegramBot,
-    telegram_notifier::TelegramNotifier,
-};
+use crate::{laptop_guarder::LaptopGuarder, telegram_bot::TelegramBot};
 
 pub struct ServiceFactory;
 
@@ -10,8 +7,7 @@ impl ServiceFactory {
         TelegramBot::new(token.to_string())
     }
 
-    pub fn create_guard(token: &str, chat_id: &str, interval: u64) -> LaptopGuarder {
-        let notifier = TelegramNotifier::new(token.to_string(), chat_id.to_string());
-        LaptopGuarder::new(notifier, interval)
+    pub fn create_guard(bot: TelegramBot, chat_id: i64, interval: u64) -> LaptopGuarder {
+        LaptopGuarder::new(bot, chat_id, interval)
     }
 }

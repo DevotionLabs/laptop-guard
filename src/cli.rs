@@ -16,7 +16,7 @@ pub struct Cli {
         help = "Sets the Telegram chat ID",
         required = false
     )]
-    pub chat_id: Option<String>,
+    pub chat_id: Option<i64>,
 
     #[clap(
         short = 'i',

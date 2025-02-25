@@ -3,17 +3,19 @@ use std::time::Duration;
 
 use crate::logger::{info, warn};
 use crate::power_checker::is_plugged;
-use crate::telegram_notifier::TelegramNotifier;
+use crate::telegram_bot::TelegramBot;
 
 pub struct LaptopGuarder {
-    telegram_notifier: TelegramNotifier,
+    tg_bot: TelegramBot,
+    chat_id: i64,
     interval: u64,
 }
 
 impl LaptopGuarder {
-    pub fn new(telegram_notifier: TelegramNotifier, interval: u64) -> Self {
+    pub fn new(tg_bot: TelegramBot, chat_id: i64, interval: u64) -> Self {
         Self {
-            telegram_notifier,
+            tg_bot,
+            chat_id,
             interval,
         }
     }
@@ -29,8 +31,7 @@ impl LaptopGuarder {
 
             if was_plugged && !is_plugged {
                 warn("Laptop has been unplugged! Sending alert...");
-                self.telegram_notifier
-                    .send_message("Laptop Unplugged! Possible theft alert!");
+                self.tg_bot.send_alert(self.chat_id);
             }
 
             was_plugged = is_plugged;

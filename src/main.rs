@@ -8,7 +8,6 @@ mod power_checker;
 mod service_factory;
 mod task_manager;
 mod telegram_bot;
-mod telegram_notifier;
 mod validator;
 
 use std::process::exit;

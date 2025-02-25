@@ -1,6 +1,8 @@
 use crate::logger::{error, info};
 use teloxide::{prelude::*, repl, types::ParseMode};
+use tokio::runtime::Handle;
 
+#[derive(Clone)]
 pub struct TelegramBot {
     bot: Bot,
 }
@@ -20,6 +22,17 @@ impl TelegramBot {
         .await;
 
         info("🛑 Telegram bot shutting down...");
+    }
+
+    pub fn send_alert(&self, chat_id: i64) {
+        let alert_msg = "🚨 Laptop unplugged\n\n\
+        Possible theft alert";
+
+        Handle::current().block_on(Self::send_markdown_message(
+            &self.bot,
+            ChatId(chat_id),
+            alert_msg,
+        ));
     }
 
     async fn handle_message(bot: Bot, msg: Message) {
