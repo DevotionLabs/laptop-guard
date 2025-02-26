@@ -1,20 +1,7 @@
-use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum AppError {
+    #[error("Invalid bot token format: {0}")]
     InvalidBotToken(String),
-    //TelegramError(String),
-    //BatteryError(String),
-}
-
-impl std::error::Error for AppError {}
-
-impl fmt::Display for AppError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AppError::InvalidBotToken(msg) => write!(f, "Invalid bot token: {}", msg),
-            //AppError::TelegramError(msg) => write!(f, "Telegram error: {}", msg),
-            //AppError::BatteryError(msg) => write!(f, "Battery error: {}", msg),
-        }
-    }
 }

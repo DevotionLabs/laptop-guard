@@ -9,7 +9,7 @@ fn is_tg_bot_token_valid(token: &str) -> bool {
 pub fn validate_tg_bot_token(bot_token: &str) -> Result<(), AppError> {
     if !is_tg_bot_token_valid(bot_token) {
         return Err(AppError::InvalidBotToken(
-            "It must follow the format '123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz0123456789'".to_string(),
+            "Provided Telegram bot API token format is invalid".to_string(),
         ));
     }
 
