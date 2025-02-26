@@ -14,14 +14,8 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let (bot, guard) = self.init_services().await?;
-
-        let bot_task = spawn(async move { bot.run().await });
-
-        let guard_task = guard.map(|g| spawn(async move { g.run().await }));
-
-        let mut task_manager = TaskManager::new(bot_task, guard_task);
-        task_manager.run().await;
+        let services = self.init_services().await?;
+        self.start_services(services).await;
 
         Ok(())
     }
@@ -38,5 +32,14 @@ impl App {
         });
 
         Ok((bot, guard))
+    }
+
+    async fn start_services(&self, (bot, guard): (TelegramBot, Option<LaptopGuarder>)) {
+        let bot_task = spawn(async move { bot.run().await });
+
+        let guard_task = guard.map(|g| spawn(async move { g.run().await }));
+
+        let mut task_manager = TaskManager::new(bot_task, guard_task);
+        task_manager.run().await;
     }
 }
