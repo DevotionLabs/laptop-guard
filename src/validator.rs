@@ -1,4 +1,4 @@
-use crate::error::AppError;
+use crate::app_error::AppError;
 use regex::Regex;
 
 fn is_tg_bot_token_valid(token: &str) -> bool {

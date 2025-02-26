@@ -1,5 +1,4 @@
-use std::thread::sleep;
-use std::time::Duration;
+use tokio::time::{sleep, Duration};
 
 use crate::logger::{info, warn};
 use crate::power_checker::is_plugged;
@@ -20,18 +19,20 @@ impl LaptopGuarder {
         }
     }
 
-    pub fn start(&self) {
-        info("Monitoring laptop power state...");
+    pub async fn run(&self) {
+        info("Starting laptop power state monitoring process...");
+        info(&format!("Chat ID: {}", self.chat_id));
+
         let mut was_plugged = is_plugged();
 
         loop {
-            sleep(Duration::from_secs(self.interval));
+            sleep(Duration::from_secs(self.interval)).await;
 
             let is_plugged = is_plugged();
 
             if was_plugged && !is_plugged {
                 warn("Laptop has been unplugged! Sending alert...");
-                self.tg_bot.send_alert(self.chat_id);
+                self.tg_bot.send_alert(self.chat_id).await;
             }
 
             was_plugged = is_plugged;

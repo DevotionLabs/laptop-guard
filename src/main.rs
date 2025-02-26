@@ -1,7 +1,7 @@
 mod app;
 mod app_config;
+mod app_error;
 mod cli;
-mod error;
 mod laptop_guarder;
 mod logger;
 mod power_checker;

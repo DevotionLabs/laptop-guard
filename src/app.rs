@@ -1,8 +1,8 @@
 use crate::{
-    app_config::AppConfig, logger::info, service_factory::ServiceFactory,
+    app_config::AppConfig, laptop_guarder::LaptopGuarder, service_factory::ServiceFactory,
     task_manager::TaskManager, telegram_bot::TelegramBot, validator::validate_tg_bot_token,
 };
-use tokio::task;
+use tokio::task::spawn;
 
 pub struct App {
     config: AppConfig,
@@ -14,12 +14,11 @@ impl App {
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        validate_tg_bot_token(&self.config.bot_token)?;
+        let (bot, guard) = self.init_services().await?;
 
-        let bot = ServiceFactory::create_bot(&self.config.bot_token);
+        let bot_task = spawn(async move { bot.run().await });
 
-        let bot_task = self.initialize_bot(bot.clone());
-        let guard_task = self.initialize_guard(bot);
+        let guard_task = guard.map(|g| spawn(async move { g.run().await }));
 
         let mut task_manager = TaskManager::new(bot_task, guard_task);
         task_manager.run().await;
@@ -27,26 +26,17 @@ impl App {
         Ok(())
     }
 
-    fn initialize_bot(&self, bot: TelegramBot) -> task::JoinHandle<()> {
-        info("Starting telegram bot...");
-        info("Use /chatid command to get your chat ID");
+    async fn init_services(
+        &self,
+    ) -> Result<(TelegramBot, Option<LaptopGuarder>), Box<dyn std::error::Error>> {
+        validate_tg_bot_token(&self.config.bot_token)?;
 
-        let bot_clone = bot.clone();
-        task::spawn(async move { bot_clone.run().await })
-    }
+        let bot = ServiceFactory::create_bot(&self.config.bot_token);
 
-    fn initialize_guard(&self, bot: TelegramBot) -> Option<task::JoinHandle<()>> {
-        let chat_id = match self.config.chat_id {
-            Some(id) => id,
-            None => return None,
-        };
+        let guard = self.config.chat_id.map(|chat_id| {
+            ServiceFactory::create_guard(bot.clone(), chat_id, self.config.interval)
+        });
 
-        info("Starting laptop guard process in full mode...");
-        info(&format!("Chat ID: {}", chat_id));
-
-        let guard = ServiceFactory::create_guard(bot, chat_id, self.config.interval);
-        let guard_task = task::spawn_blocking(move || guard.start());
-
-        Some(guard_task)
+        Ok((bot, guard))
     }
 }

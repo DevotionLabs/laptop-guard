@@ -1,6 +1,5 @@
 use crate::logger::{error, info};
 use teloxide::{prelude::*, repl, types::ParseMode};
-use tokio::runtime::Handle;
 
 #[derive(Clone)]
 pub struct TelegramBot {
@@ -15,6 +14,9 @@ impl TelegramBot {
     }
 
     pub async fn run(&self) {
+        info("Starting telegram bot...");
+        info("Use /chatid command to get your chat ID");
+
         repl(self.bot.clone(), |bot: Bot, msg: Message| async move {
             Self::handle_message(bot, msg).await;
             Ok(())
@@ -24,15 +26,11 @@ impl TelegramBot {
         info("🛑 Telegram bot shutting down...");
     }
 
-    pub fn send_alert(&self, chat_id: i64) {
+    pub async fn send_alert(&self, chat_id: i64) {
         let alert_msg = "🚨 Laptop unplugged\n\n\
         Possible theft alert";
 
-        Handle::current().block_on(Self::send_markdown_message(
-            &self.bot,
-            ChatId(chat_id),
-            alert_msg,
-        ));
+        Self::send_markdown_message(&self.bot, ChatId(chat_id), alert_msg).await;
     }
 
     async fn handle_message(bot: Bot, msg: Message) {
